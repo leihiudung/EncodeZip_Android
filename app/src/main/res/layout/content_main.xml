@@ -1,9 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:orientation="vertical"
+        tools:ignore="MissingConstraints">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textlayout_username_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionNext"
+            app:counterEnabled="true"
+            app:counterMaxLength="32"
+            app:hintTextAppearance="@style/login_hintAppearance">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_username_login"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="@string/login_text_hint_username"
+                android:inputType="text"
+                android:lines="1"
+                android:maxLength="32"
+                android:textSize="16sp"
+                android:text="Admin">
+
+            </com.google.android.material.textfield.TextInputEditText>
+
+
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textlayout_password_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:hintTextAppearance="@style/login_hintAppearance"
+            app:passwordToggleEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_password_login"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="@string/login_text_hint_password"
+                android:imeOptions="actionDone"
+                android:inputType="textPassword"
+                android:lines="1"
+                android:singleLine="true"
+                android:textSize="16sp"
+                android:text="123456"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/btn_signin_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@color/color_login_btn_bg"
+            android:text="@string/login_btn_text"
+            android:textAllCaps="false"
+            android:textColor="#ffffff"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
 
     <fragment
         android:id="@+id/nav_host_fragment_content_main"
@@ -16,4 +87,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:navGraph="@navigation/nav_graph" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+
+</LinearLayout>

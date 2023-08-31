@@ -8,9 +8,13 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
+import com.bvt.encodezip.activity.FileListActivity;
 import com.bvt.encodezip.databinding.ActivityMainBinding;
+import com.bvt.encodezip.utils.PreferenceUtil;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputEditText;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Environment;
@@ -27,20 +31,38 @@ import androidx.navigation.ui.NavigationUI;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.Toast;
 
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.progress.ProgressMonitor;
 
 
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
+
+    Button loginBtn;
+    TextInputEditText usernameLogin;
+    TextInputEditText passwordLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +109,85 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        usernameLogin = findViewById(R.id.et_username_login);
+        passwordLogin = findViewById(R.id.et_password_login);
+        Button loginBtn = findViewById(R.id.btn_signin_login);
+        loginBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (getUsername().isEmpty() || getPassword().isEmpty()) {
+                    Toast.makeText(MainActivity.this, "帐号密码不能为空", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                loginRequest();
+            }
+        });
+    }
+
+    private String getUsername() {
+        return usernameLogin.getText().toString().trim();
+    }
+
+    private String getPassword() {
+        return passwordLogin.getText().toString().trim();
+    }
+
+    private void loginRequest() {
+
+        JSONObject json = new JSONObject();
+        try {
+            json.put("username", usernameLogin.getText().toString());
+            json.put("password", passwordLogin.getText().toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        // 创建请求体
+        MediaType mediaType = MediaType.parse("application/json;charset=utf-8");
+        RequestBody requestBody = RequestBody.create(String.valueOf(json), mediaType);
+
+        Request request = new Request.Builder().post(requestBody).url("http://192.168.2.216:8081/admin/login").build();
+
+        OkHttpClient okHttpClient = new OkHttpClient();
+
+
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                System.out.println("Error");
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                try {
+                    JSONObject jsonobj = new JSONObject(response.body().string());
+                    int rescode = jsonobj.getInt("code");
+                    String resmsg = jsonobj.getString("msg");
+                    if(rescode==200){
+                        JSONObject resdata = jsonobj.getJSONObject("data");
+                        String tokenData = resdata.getString("token");
+
+                        PreferenceUtil.putPrefString(getBaseContext(), PreferenceUtil.getTokenPreference(), tokenData.toString());
+                        jumpActivity();
+                    }else{
+                        runOnUiThread(new Runnable() {
+                            public void run() {
+                                Toast.makeText(getApplicationContext(), "用户名/密码不对", Toast.LENGTH_LONG).show();
+                            }
+                        });
+
+                    }
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        });
+    }
+
+    public void jumpActivity() {
+        Intent intent = new Intent(this, FileListActivity.class);
+        startActivity(intent);
     }
 
     public void excise() {
