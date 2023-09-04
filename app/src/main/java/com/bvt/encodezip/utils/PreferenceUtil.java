@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import java.util.List;
+
 public class PreferenceUtil {
 
     final static String TOKEN_PREFERENCE = "TOKEN_PREFERENCE";
@@ -70,4 +72,33 @@ public class PreferenceUtil {
 
         return tokenStr;
     }
+
+    public static boolean putPreFileDownloaded(Context context, String fileName, String path) {
+        try {
+            createSharedPreferenceEditor(context);
+            String filesCombStr = sharedPreferences.getString(FileUtils.DWONLOADED_FILE_LIST, "");
+            StringBuffer filesCombStrBuff = new StringBuffer(filesCombStr);
+
+            filesCombStrBuff.append(fileName + ",");
+            editor.putString(FileUtils.DWONLOADED_FILE_LIST, filesCombStrBuff.toString());
+            editor.putString(fileName, path);
+            editor.commit();
+            return true;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
+    }
+
+    public static String getPreFileDownloaded(Context context, String preKey) {
+        if (context == null) {
+            return "";
+        }
+        if (sharedPreferences == null) {
+            sharedPreferences = context.getSharedPreferences(preKey, Context.MODE_PRIVATE);
+        }
+        String filesName = sharedPreferences.getString(preKey, null);
+        return filesName;
+    }
 }
+

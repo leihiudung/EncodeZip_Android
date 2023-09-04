@@ -57,18 +57,7 @@ public class FirstFragment extends Fragment {
                 String logFolderPath = combinePath(extSdRootPath, "encode");
                 String decodeFolderPath = combinePath(extSdRootPath, "decode");
                 String zipFilePath = combinePath(logFolderPath, "encode.mp4");
-//                ZipInputStreamExample inputStream = new ZipInputStreamExample();
 
-//                String encodeOtherSuf = combinePath(logFolderPath, "encode.mp4");
-
-//                File newFile = new File(combinePath(decodeFolderPath, "encode.zip"));
-//                File encodeOtherSufFile = new File(encodeOtherSuf);
-//                encodeOtherSufFile.renameTo(newFile);
-//                File correctSuffix = new File(encodeOtherSuf).renameTo(newFile) == true ? newFile : null;
-
-//                if (newFile == null) {
-//                    return;
-//                }
                 try {
                     ZipInputStreamExample.deCompress(new File(zipFilePath), decodeFolderPath, "abcgo");
 //                    ZipInputStreamExample.deCompress(newFile, decodeFolderPath, "abcgo");

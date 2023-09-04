@@ -10,6 +10,7 @@ import android.os.Bundle;
 
 import com.bvt.encodezip.activity.FileListActivity;
 import com.bvt.encodezip.databinding.ActivityMainBinding;
+import com.bvt.encodezip.utils.FileUtils;
 import com.bvt.encodezip.utils.PreferenceUtil;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
@@ -146,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
         MediaType mediaType = MediaType.parse("application/json;charset=utf-8");
         RequestBody requestBody = RequestBody.create(String.valueOf(json), mediaType);
 
-        Request request = new Request.Builder().post(requestBody).url("http://192.168.2.216:8081/admin/login").build();
+        Request request = new Request.Builder().post(requestBody).url(FileUtils.SERVER_ADDR + "/admin/login").build();
 
         OkHttpClient okHttpClient = new OkHttpClient();
 
