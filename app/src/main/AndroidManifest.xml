@@ -11,6 +11,7 @@
     <uses-permission
         android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
 
     <application
         android:allowBackup="true"
@@ -22,7 +23,10 @@
         android:requestLegacyExternalStorage="true"
         android:supportsRtl="true"
         android:theme="@style/Theme.EncodeZip"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
+
+
         <activity
             android:name=".activity.FileLoadedListActivity"
             android:exported="false"
@@ -52,6 +56,10 @@
             android:name=".activity.FileListActivity"
             android:label="@string/file_list_activity_title"
             android:theme="@style/Theme.EncodeZip.NoActionBar" />
+        <activity
+            android:name=".activity.FileBrowseActivity"
+            android:label=""
+            android:theme="@style/Theme.EncodeZip.NoActionBar"/>
     </application>
 
 </manifest>

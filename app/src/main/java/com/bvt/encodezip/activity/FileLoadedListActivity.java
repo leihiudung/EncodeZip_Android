@@ -2,12 +2,14 @@ package com.bvt.encodezip.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.bvt.encodezip.R;
 import com.bvt.encodezip.adapter.FileDownloadedListViewAdapter;
-import com.bvt.encodezip.adapter.FileListAdapter;
 import com.bvt.encodezip.utils.FileUtils;
 import com.bvt.encodezip.utils.PreferenceUtil;
 
@@ -15,10 +17,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class FileLoadedListActivity extends AppCompatActivity {
+import kotlin.collections.builders.MapBuilder;
+
+public class FileLoadedListActivity extends AppCompatActivity implements AdapterView.OnItemLongClickListener {
 
     private FileDownloadedListViewAdapter adapter;
-    public ListView fileList;
+    public ListView fileListView;
 
     private List<String> fileNameList;
 
@@ -34,15 +38,30 @@ public class FileLoadedListActivity extends AppCompatActivity {
     private void initData() {
         String filesName = PreferenceUtil.getPreFileDownloaded(this, FileUtils.DWONLOADED_FILE_LIST);
         String[] fileNameArr = filesName.split(",");
+
+
         fileNameList = new ArrayList<String>(fileNameArr.length);
 
         Collections.addAll(fileNameList, fileNameArr);
         adapter = new FileDownloadedListViewAdapter(this, fileNameList);
-        fileList.setAdapter(adapter);
+        fileListView.setAdapter(adapter);
+        fileListView.setOnItemLongClickListener(this);
     }
 
     private void initView() {
-       fileList = findViewById(R.id.file_downloaded_list);
+       fileListView = findViewById(R.id.file_downloaded_list);
 
+    }
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+        String fileSuffix = PreferenceUtil.getString(this, fileNameList.get(i) + "fileSuffix");
+
+        String fileName = fileNameList.get(i);
+        Intent intent = new Intent(this, FileBrowseActivity.class);
+        intent.putExtra("filename", fileName);
+        intent.putExtra("fileSuffix", fileSuffix);
+        startActivity(intent);
+        return true;
     }
 }

@@ -4,7 +4,10 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PreferenceUtil {
 
@@ -73,7 +76,7 @@ public class PreferenceUtil {
         return tokenStr;
     }
 
-    public static boolean putPreFileDownloaded(Context context, String fileName, String path) {
+    public static boolean putPreFileDownloaded(Context context, String fileName, String fileSuffix, String path) {
         try {
             createSharedPreferenceEditor(context);
             String filesCombStr = sharedPreferences.getString(FileUtils.DWONLOADED_FILE_LIST, "");
@@ -81,7 +84,8 @@ public class PreferenceUtil {
 
             filesCombStrBuff.append(fileName + ",");
             editor.putString(FileUtils.DWONLOADED_FILE_LIST, filesCombStrBuff.toString());
-            editor.putString(fileName, path);
+            editor.putString(fileName + "filePath", path);
+            editor.putString(fileName + "fileSuffix", fileSuffix);
             editor.commit();
             return true;
         } catch (Exception ex) {

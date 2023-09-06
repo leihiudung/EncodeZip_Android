@@ -47,6 +47,7 @@ import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Headers;
 import okhttp3.OkHttp;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -248,7 +249,7 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
     private void downloadFile(FileVO fileVO) {
         //下载路径，如果路径无效了，可换成你的下载路径
         final String url = FileUtils.SERVER_ADDR + "/employee/" + fileVO.getFileName();
-        Request request = new Request.Builder().url(url).build();
+        Request request = new Request.Builder().header("Authorization", PreferenceUtil.getString(this, PreferenceUtil.getTokenPreference())).url(url).build();
         new OkHttpClient().newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -263,10 +264,22 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
                 BufferedSink bufferedSink = null;
                 String filename = url.substring(url.lastIndexOf("/") + 1);
 
-                File localFile = new File(getExternalFilesDir(null), "encode_dir");
+                File localFile = new File(getCacheDir().getAbsoluteFile(), "file");
+//                File localFile = new File(getExternalFilesDir(null), "encode_dir");
                 if (!localFile.mkdirs()) {
                     localFile.createNewFile();
                 }
+
+                Headers responseHeaders = response.headers();
+                int responseHeadersLength = responseHeaders.size();
+                for (int i = 0; i < responseHeadersLength; i++){
+                    String headerName = responseHeaders.name(i);
+                    String headerValue = responseHeaders.get(headerName);
+                    System.out.print("TAG----------->Name:"+headerName+"------------>Value:"+headerValue+"\n");
+                }
+                String fileSuffix = response.header("filetype");
+
+
                 String savePath = localFile.getAbsolutePath();
                 //这是里的mContext是我提前获取了android的context
                 File docFile = new File(savePath+File.separator+filename);
@@ -280,8 +293,9 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
                 } finally {
                     if (bufferedSink != null) {
                         bufferedSink.close();
+//                        String fileSuffix = response.header("filetype");
 //                        showFinishDialog(R.string.file_alert_dialog_download_finish);
-                        PreferenceUtil.putPreFileDownloaded(getApplicationContext(), filename, savePath);
+                        PreferenceUtil.putPreFileDownloaded(getApplicationContext(), filename, fileSuffix, savePath);
                     }
 
                 }
