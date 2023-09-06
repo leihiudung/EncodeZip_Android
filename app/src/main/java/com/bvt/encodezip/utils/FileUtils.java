@@ -12,7 +12,7 @@ import android.provider.MediaStore;
 
 public final class FileUtils {
 
-    public static final String SERVER_ADDR = "http://192.168.2.216:8081";
+    public static final String SERVER_ADDR = "http://192.168.0.132:8081";
     public static final String DWONLOADED_FILE_LIST = "downloaded_file";
 
 
