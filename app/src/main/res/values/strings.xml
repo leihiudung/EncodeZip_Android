@@ -22,6 +22,7 @@
     <string name="file_list_select">选择文件</string>
     <string name="file_alert_dialog_long_selected">需要下载该文件吗</string>
     <string name="file_alert_dialog_positive">是的</string>
+    <string name="file_alert_dialog_online">在线看</string>
     <string name="file_alert_dialog_negative">暂不</string>
     <string name="file_alert_dialog_download_finish">下载完成</string>
     <string name="title_activity_file_loaded_list">FileLoadedListActivity</string>

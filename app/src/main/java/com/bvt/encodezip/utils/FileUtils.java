@@ -10,11 +10,49 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.FileHeader;
+
+import java.io.File;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+
 public final class FileUtils {
 
-    public static final String SERVER_ADDR = "http://192.168.0.132:8081";
+    public static final String SERVER_ADDR = "http://192.168.2.216:8081";
     public static final String DWONLOADED_FILE_LIST = "downloaded_file";
 
+    public static String decodeFile(Context context, File file) throws Exception {
+        File destinationFile = renameSuffix(file);
+        ZipFile zFile = new ZipFile(destinationFile);
+        zFile.setCharset(Charset.forName("UTF-8"));
+        if (!zFile.isValidZipFile()) {
+            throw new ZipException("压缩文件不合法,可能被损坏.");
+        }
+
+        String destPath = context.getExternalCacheDir() + "/" + "temp";
+        File destDir = new File(destPath);
+        if (destDir.isDirectory() && !destDir.exists()) {
+            destDir.mkdir();
+        }
+        if (zFile.isEncrypted()) {//检查是否需要密码
+            zFile.setPassword("abcgo".toCharArray());
+        }
+        zFile.extractAll(destPath);
+
+        List<FileHeader> headerList = zFile.getFileHeaders();
+        List<File> extractedFileList = new ArrayList<File>();
+        for (FileHeader fileHeader : headerList) {
+            if (!fileHeader.isDirectory()) {
+                extractedFileList.add(new File(destDir, fileHeader.getFileName()));
+            }
+        }
+        File[] extractedFiles = new File[extractedFileList.size()];
+        extractedFileList.toArray(extractedFiles);
+        return extractedFileList.size() > 0 ? extractedFileList.get(0).getName() : null;
+    }
 
     public static String getFilePathByUri(Context context, Uri uri) {
         String path = null;
@@ -102,4 +140,16 @@ public final class FileUtils {
     }
     private static boolean isMediaDocument(Uri uri) {  return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
+
+    private static File renameSuffix(File mp4File) {
+
+        String encodeFilePath = mp4File.getParentFile().getAbsolutePath();
+        File newFile = new File(encodeFilePath
+        + mp4File.getName() + ".zip");
+
+        mp4File.renameTo(newFile);
+
+        return newFile;
+    }
+
 }

@@ -242,8 +242,63 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
             public void onClick(DialogInterface dialogInterface, int i) {
 
             }
+        }).setNeutralButton(R.string.file_alert_dialog_online, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                onlineCheckFile(selectedFile);
+            }
         }).show();
         return true;
+    }
+
+    private void onlineCheckFile(FileVO fileVO) {
+        final String url = FileUtils.SERVER_ADDR + "/employee/" + fileVO.getFileName();
+        Request request = new Request.Builder().header("Authorization", PreferenceUtil.getString(this, PreferenceUtil.getTokenPreference())).url(url).build();
+        new OkHttpClient().newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // 下载失败
+                e.printStackTrace();
+                Log.i("DOWNLOAD", "download failed");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                Sink sink = null;
+                BufferedSink bufferedSink = null;
+                String filename = url.substring(url.lastIndexOf("/") + 1);
+
+                File localFile = new File(getCacheDir().getAbsoluteFile().getAbsolutePath());
+//                File localFile = new File(getExternalFilesDir(null), "encode_dir");
+                String fileSuffix = response.header("filetype");
+
+
+                String savePath = localFile.getAbsolutePath();
+                //这是里的mContext是我提前获取了android的context
+                File docFile = new File(savePath+File.separator+filename);
+                try {
+                    sink = Okio.sink(docFile);
+                    bufferedSink = Okio.buffer(sink);
+                    bufferedSink.writeAll(response.body().source());
+                    bufferedSink.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    if (bufferedSink != null) {
+                        bufferedSink.close();
+                    }
+
+                }
+                try {
+                    String fileName = FileUtils.decodeFile(getApplicationContext(), docFile);
+                    showFileContent(fileName);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        });
+
     }
 
     private void downloadFile(FileVO fileVO) {
@@ -270,13 +325,13 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
                     localFile.createNewFile();
                 }
 
-                Headers responseHeaders = response.headers();
-                int responseHeadersLength = responseHeaders.size();
-                for (int i = 0; i < responseHeadersLength; i++){
-                    String headerName = responseHeaders.name(i);
-                    String headerValue = responseHeaders.get(headerName);
-                    System.out.print("TAG----------->Name:"+headerName+"------------>Value:"+headerValue+"\n");
-                }
+//                Headers responseHeaders = response.headers();
+//                int responseHeadersLength = responseHeaders.size();
+//                for (int i = 0; i < responseHeadersLength; i++){
+//                    String headerName = responseHeaders.name(i);
+//                    String headerValue = responseHeaders.get(headerName);
+//                    System.out.print("TAG----------->Name:"+headerName+"------------>Value:"+headerValue+"\n");
+//                }
                 String fileSuffix = response.header("filetype");
 
 
@@ -301,6 +356,15 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
                 }
             }
         });
+
+    }
+
+
+    private void showFileContent(String fileName) {
+        Intent intent = new Intent(this, FileBrowseActivity.class);
+        intent.putExtra("filename", fileName);
+        intent.putExtra("fileSuffix", fileName.split(".")[1]);
+        startActivity(intent);
 
     }
 
