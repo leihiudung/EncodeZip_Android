@@ -9,12 +9,14 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.FileHeader;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +27,7 @@ public final class FileUtils {
     public static final String DWONLOADED_FILE_LIST = "downloaded_file";
 
     public static String decodeFile(Context context, File file) throws Exception {
+        Log.d("文件fileutlis", file.exists() ? "YES" : "NO");
         File destinationFile = renameSuffix(file);
         ZipFile zFile = new ZipFile(destinationFile);
         zFile.setCharset(Charset.forName("UTF-8"));
@@ -143,13 +146,27 @@ public final class FileUtils {
 
     private static File renameSuffix(File mp4File) {
 
-        String encodeFilePath = mp4File.getParentFile().getAbsolutePath();
-        File newFile = new File(encodeFilePath
-        + mp4File.getName() + ".zip");
+        Log.d("path路径", mp4File.getName().substring(0, mp4File.getName().indexOf("."))+ "");
+        String encodeFilePath = mp4File.getParentFile().getPath();
+        File newFile = new File(encodeFilePath + File.separator
+        + mp4File.getName().substring(0, mp4File.getName().indexOf(".")) + ".zip");
+        if (newFile.exists()) {
+            newFile.delete();
+        }
+        try {
+            boolean flag = newFile.createNewFile();
+            Log.d("新建文件", flag + "");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        Log.d("w文件位置", newFile.isFile() ? "yes" : "no");
+        Log.d("w文件位置", newFile.getPath() + "||" + mp4File.getPath());
+        boolean flag = mp4File.renameTo(newFile);
+        if (flag) {
+            return newFile;
+        }
 
-        mp4File.renameTo(newFile);
-
-        return newFile;
+        return null;
     }
 
 }

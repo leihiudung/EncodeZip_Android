@@ -17,9 +17,16 @@ import com.bvt.encodezip.R;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.FileHeader;
+
 import org.json.JSONObject;
 
 import java.io.File;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class FileBrowseActivity extends AppCompatActivity {
@@ -40,7 +47,7 @@ public class FileBrowseActivity extends AppCompatActivity {
         Intent tempIntent = this.getIntent();
         fileName = tempIntent.getStringExtra("filename");
         fileSuffix = tempIntent.getStringExtra("fileSuffix");
-
+        isOnlineFile = tempIntent.getBooleanExtra("isOnlineFile", false);
 
         initView();
     }
@@ -78,25 +85,44 @@ public class FileBrowseActivity extends AppCompatActivity {
      */
     private void setWebViewContent(String fileName, String fileSuffix) {
 
-        File localFile = new File(getCacheDir().getAbsoluteFile(), isOnlineFile ? "temp" : "file");
+        File localFile = new File(getCacheDir().getPath(), isOnlineFile ? "temp" : "file");
+        File pdfFile = null;
+        try {
+            String savePath = localFile.getAbsolutePath();
+            File zipFile = new File(getCacheDir().getPath()+ File.separator + (isOnlineFile ? "temp" : "file") + File.separator + fileName + ".zip");
+            Log.d("zipfile", zipFile.exists() + " " + zipFile.isDirectory());
+            ZipFile zFile = new ZipFile(localFile.getPath() + File.separator + fileName + ".zip");
+            zFile.setCharset(Charset.forName("UTF-8"));
+            if (!zFile.isValidZipFile()) {
+                throw new ZipException("压缩文件不合法,可能被损坏.");
+            }
+            //3.判断是否已加密
+            if (zFile.isEncrypted()) {
+                zFile.setPassword("abcgo".toCharArray());
+            }
+            //4.解压所有文件
+            zFile.extractAll(localFile.getPath());
+            List headerList = zFile.getFileHeaders();
+            List<File> extractedFileList = new ArrayList<>();
+            for (Object object : headerList) {
+                FileHeader fileHeader = (FileHeader) object;
+                if (!fileHeader.isDirectory()) {
+                    extractedFileList.add(new File(localFile, fileHeader.getFileName()));
+                }
+            }
+            File[] extractedFiles = new File[extractedFileList.size()];
+            extractedFileList.toArray(extractedFiles);
+            pdfFile = extractedFileList.get(0);
+        } catch (Exception e) {
 
-//        File localFile = new File(getExternalFilesDir(null), "encode_dir");
-//        Uri fileUri = FileProvider.getUriForFile(this, "com.bvt.encodezip", localFile);
+        }
 
         String savePath = localFile.getAbsolutePath();
-        //这是里的mContext是我提前获取了android的context
-        File docFile = new File(savePath+File.separator + fileName);
 
-        boolean isExist = docFile.exists();
-        Log.d("is exist", isExist ? "yes" : "no");
-//        Log.d("DocFile ", docFile.getPath() + " ||" + docFile.getAbsolutePath());
-
-//        Uri path = Uri.parse(Environment.getExternalStorageDirectory().toString() + "/data/test.pdf");
-
-        String filePath = docFile.getName();
-//        mWebView.loadUrl("file:///android_asset/pdfjs/web/viewer.html?file=" + "file:///android_asset/1600agreement.pdf");
         try {
-            mWebView.loadUrl("file:///android_asset/pdfjs/web/viewer.html?file://" + docFile.getPath());
+//                    mWebView.loadUrl("file:///android_asset/pdfjs/web/viewer.html?file=" + "file:///android_asset/agreement.pdf");
+
+            mWebView.loadUrl("file:///android_asset/pdfjs/web/viewer.html?file=" + pdfFile.getPath());
 
         }catch (RuntimeException e) {
             Log.e("loadUrl error", e.getMessage());
@@ -109,16 +135,45 @@ public class FileBrowseActivity extends AppCompatActivity {
      * @param fileSuffix
      */
     private void setWebImage(String fileName, String fileSuffix) {
-        File localFile = new File(getCacheDir().getAbsoluteFile(), "file");
+        File localFile = new File(getCacheDir().getAbsoluteFile(), isOnlineFile ? "temp" : "file");
 
 //        File localFile = new File(getExternalFilesDir(null), "encode_dir");
 //        Uri fileUri = FileProvider.getUriForFile(this, "com.bvt.encodezip", localFile);
+        File imageFile = null;
+        try {
+            String savePath = localFile.getAbsolutePath();
+            ZipFile zFile = new ZipFile(localFile.getPath() + File.separator + fileName + ".zip");
+            zFile.setCharset(Charset.forName("UTF-8"));
+            if (!zFile.isValidZipFile()) {
+                throw new ZipException("压缩文件不合法,可能被损坏.");
+            }
+            //3.判断是否已加密
+            if (zFile.isEncrypted()) {
+                zFile.setPassword("abcgo".toCharArray());
+            }
+            //4.解压所有文件
+            zFile.extractAll(localFile.getPath());
+            List headerList = zFile.getFileHeaders();
+            List<File> extractedFileList = new ArrayList<>();
+            for (Object object : headerList) {
+                FileHeader fileHeader = (FileHeader) object;
+                if (!fileHeader.isDirectory()) {
+                    extractedFileList.add(new File(localFile, fileHeader.getFileName()));
+                }
+            }
+            File[] extractedFiles = new File[extractedFileList.size()];
+            extractedFileList.toArray(extractedFiles);
+            imageFile = extractedFileList.get(0);
+        } catch (Exception e) {
 
-        String savePath = localFile.getAbsolutePath();
+        }
+
+
+
         //这是里的mContext是我提前获取了android的context
-        File docFile = new File(savePath+File.separator + fileName);
-
-        imageView.setImageURI(Uri.fromFile(docFile));
+//        File docFile = new File(savePath+File.separator + fileName + "." + fileSuffix);
+//        Log.d("file_exist", docFile.isFile() ? "YES" : "NO");
+        imageView.setImageURI(Uri.fromFile(imageFile));
 
 
     }
