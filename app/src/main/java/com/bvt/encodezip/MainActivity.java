@@ -93,6 +93,11 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        String token = PreferenceUtil.getString(this, PreferenceUtil.getTokenPreference());
+        if (token != null && !token.isEmpty()) {
+            jumpActivity();
+        }
+
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());

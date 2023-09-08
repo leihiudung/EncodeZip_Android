@@ -44,6 +44,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -91,6 +92,12 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
         initData();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        dropTempFile();
+    }
+
     private void initView() {
         toolbar = findViewById(R.id.file_toolbar);
         setSupportActionBar(toolbar);
@@ -129,6 +136,7 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
                             fileVo.setId(jsonObject.getInt("id"));
                             fileVo.setFileName(jsonObject.getString("fileName"));
                             fileVo.setTeleporter(jsonObject.getString("teleporter"));
+                            fileVo.setFileAliasName(jsonObject.getString("fileAliasName"));
 
                             fileVOList.add(fileVo);
                         }
@@ -242,8 +250,80 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
             public void onClick(DialogInterface dialogInterface, int i) {
 
             }
+        }).setNeutralButton(R.string.file_alert_dialog_online, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                onlineCheckFile(selectedFile);
+            }
         }).show();
         return true;
+    }
+
+    private void onlineCheckFile(FileVO fileVO) {
+        final String url = FileUtils.SERVER_ADDR + "/employee/" + fileVO.getFileAliasName();
+        Request request = new Request.Builder().header("Authorization", PreferenceUtil.getString(this, PreferenceUtil.getTokenPreference())).addHeader("Accept-Encoding", "gzip, deflate, br").url(url).build();
+        OkHttpClient httpClient = new OkHttpClient.Builder()
+                .connectTimeout(20, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
+                .build();
+
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // 下载失败
+                e.printStackTrace();
+                Log.i("DOWNLOAD", "download failed");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                Sink sink = null;
+                BufferedSink bufferedSink = null;
+                String filename = url.substring(url.lastIndexOf("/") + 1);
+
+                File localFile = new File(getCacheDir().getAbsoluteFile().getAbsolutePath() + "temp");
+//                File localFile = new File(getExternalFilesDir(null), "encode_dir");
+
+                String fileSuffix = response.header("filetype");
+
+                String fileName = Uri.decode(response.header("filename"));
+
+
+                String savePath = getCacheDir().getPath() + File.separator + "temp";//localFile.getAbsolutePath();
+                File tempDir = new File(savePath);
+                if (!tempDir.exists()) {
+                    tempDir.mkdirs();
+                }
+                //这是里的mContext是我提前获取了android的context
+                File docFile = new File(savePath+File.separator + fileName + ".abc");
+                if (!docFile.exists()) {
+
+                    docFile.createNewFile();
+                }
+
+                try {
+                    sink = Okio.sink(docFile);
+                    bufferedSink = Okio.buffer(sink);
+                    bufferedSink.writeAll(response.body().source());
+                    bufferedSink.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    if (bufferedSink != null) {
+                        bufferedSink.close();
+                    }
+
+                }
+                try {
+                    fileName = FileUtils.decodeFile(getApplicationContext(), docFile);
+                    showFileContent(fileName, fileSuffix);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        });
+
     }
 
     private void downloadFile(FileVO fileVO) {
@@ -255,7 +335,6 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
             public void onFailure(Call call, IOException e) {
                 // 下载失败
                 e.printStackTrace();
-                Log.i("DOWNLOAD","download failed");
             }
 
             @Override
@@ -270,13 +349,13 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
                     localFile.createNewFile();
                 }
 
-                Headers responseHeaders = response.headers();
-                int responseHeadersLength = responseHeaders.size();
-                for (int i = 0; i < responseHeadersLength; i++){
-                    String headerName = responseHeaders.name(i);
-                    String headerValue = responseHeaders.get(headerName);
-                    System.out.print("TAG----------->Name:"+headerName+"------------>Value:"+headerValue+"\n");
-                }
+//                Headers responseHeaders = response.headers();
+//                int responseHeadersLength = responseHeaders.size();
+//                for (int i = 0; i < responseHeadersLength; i++){
+//                    String headerName = responseHeaders.name(i);
+//                    String headerValue = responseHeaders.get(headerName);
+//                    System.out.print("TAG----------->Name:"+headerName+"------------>Value:"+headerValue+"\n");
+//                }
                 String fileSuffix = response.header("filetype");
 
 
@@ -293,8 +372,6 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
                 } finally {
                     if (bufferedSink != null) {
                         bufferedSink.close();
-//                        String fileSuffix = response.header("filetype");
-//                        showFinishDialog(R.string.file_alert_dialog_download_finish);
                         PreferenceUtil.putPreFileDownloaded(getApplicationContext(), filename, fileSuffix, savePath);
                     }
 
@@ -304,9 +381,113 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
 
     }
 
+
+    private void showFileContent(String fileName, String fileSuffix) {
+        Intent intent = new Intent(this, FileBrowseActivity.class);
+        intent.putExtra("isOnlineFile", true);
+        intent.putExtra("filename", fileName);
+        intent.putExtra("fileSuffix", fileSuffix);
+        startActivity(intent);
+
+    }
+
     private void showFinishDialog(int resId) {
         Toast.makeText(this, R.string.file_alert_dialog_long_selected, Toast.LENGTH_LONG).show();
     }
+
+    private void dropTempFile() {
+        String savePath = getCacheDir().getPath() + File.separator + "temp";
+        File tempFile = new File(savePath);
+        if (!tempFile.exists() || !tempFile.isDirectory()) {
+            return;
+        }
+        File[] files = tempFile.listFiles();
+        boolean flag = false;
+        for (File file : files) {
+            // 删除子文件
+            if (file.isFile()) {
+                flag = deleteSingleFile(file.getAbsolutePath());
+                if (!flag)
+                    break;
+            }
+            // 删除子目录
+            else if (file.isDirectory()) {
+                flag = deleteDirectory(file.getAbsolutePath());
+                if (!flag)
+                    break;
+            }
+        }
+
+    }
+
+    /** 删除单个文件
+     * @param filePath$Name 要删除的文件的文件名
+     * @return 单个文件删除成功返回true，否则返回false
+     */
+    private boolean deleteSingleFile(String filePath$Name) {
+        File file = new File(filePath$Name);
+        // 如果文件路径所对应的文件存在，并且是一个文件，则直接删除
+        if (file.exists() && file.isFile()) {
+            if (file.delete()) {
+                Log.e("--Method--", "Copy_Delete.deleteSingleFile: 删除单个文件" + filePath$Name + "成功！");
+                return true;
+            } else {
+                Toast.makeText(getApplicationContext(), "删除单个文件" + filePath$Name + "失败！", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        } else {
+            Toast.makeText(getApplicationContext(), "删除单个文件失败：" + filePath$Name + "不存在！", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+    }
+
+
+    /** 删除目录及目录下的文件
+     * @param filePath 要删除的目录的文件路径
+     * @return 目录删除成功返回true，否则返回false
+     */
+    private boolean deleteDirectory(String filePath) {
+        // 如果dir不以文件分隔符结尾，自动添加文件分隔符
+        if (!filePath.endsWith(File.separator))
+            filePath = filePath + File.separator;
+        File dirFile = new File(filePath);
+        // 如果dir对应的文件不存在，或者不是一个目录，则退出
+        if ((!dirFile.exists()) || (!dirFile.isDirectory())) {
+            Toast.makeText(getApplicationContext(), "删除目录失败：" + filePath + "不存在！", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        boolean flag = true;
+        // 删除文件夹中的所有文件包括子目录
+        File[] files = dirFile.listFiles();
+        for (File file : files) {
+            // 删除子文件
+            if (file.isFile()) {
+                flag = deleteSingleFile(file.getAbsolutePath());
+                if (!flag)
+                    break;
+            }
+            // 删除子目录
+            else if (file.isDirectory()) {
+                flag = deleteDirectory(file
+                        .getAbsolutePath());
+                if (!flag)
+                    break;
+            }
+        }
+        if (!flag) {
+            Toast.makeText(getApplicationContext(), "删除目录失败！", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        // 删除当前目录
+        if (dirFile.delete()) {
+            Log.e("--Method--", "Copy_Delete.deleteDirectory: 删除目录" + filePath + "成功！");
+            return true;
+        } else {
+            Toast.makeText(getApplicationContext(), "删除目录：" + filePath + "失败！", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+    }
+
 
     class InnerFileReceiver extends BroadcastReceiver {
         @Override

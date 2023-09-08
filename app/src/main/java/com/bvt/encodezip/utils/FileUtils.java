@@ -9,12 +9,53 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.util.Log;
+
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.FileHeader;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class FileUtils {
 
-    public static final String SERVER_ADDR = "http://192.168.0.132:8081";
+    public static final String SERVER_ADDR = "http://192.168.2.216:8081";
     public static final String DWONLOADED_FILE_LIST = "downloaded_file";
 
+    public static String decodeFile(Context context, File file) throws Exception {
+        Log.d("文件fileutlis", file.exists() ? "YES" : "NO");
+        File destinationFile = renameSuffix(file);
+        ZipFile zFile = new ZipFile(destinationFile);
+        zFile.setCharset(Charset.forName("UTF-8"));
+        if (!zFile.isValidZipFile()) {
+            throw new ZipException("压缩文件不合法,可能被损坏.");
+        }
+
+        String destPath = context.getExternalCacheDir() + "/" + "temp";
+        File destDir = new File(destPath);
+        if (destDir.isDirectory() && !destDir.exists()) {
+            destDir.mkdir();
+        }
+        if (zFile.isEncrypted()) {//检查是否需要密码
+            zFile.setPassword("abcgo".toCharArray());
+        }
+        zFile.extractAll(destPath);
+
+        List<FileHeader> headerList = zFile.getFileHeaders();
+        List<File> extractedFileList = new ArrayList<File>();
+        for (FileHeader fileHeader : headerList) {
+            if (!fileHeader.isDirectory()) {
+                extractedFileList.add(new File(destDir, fileHeader.getFileName()));
+            }
+        }
+        File[] extractedFiles = new File[extractedFileList.size()];
+        extractedFileList.toArray(extractedFiles);
+        return extractedFileList.size() > 0 ? extractedFileList.get(0).getName() : null;
+    }
 
     public static String getFilePathByUri(Context context, Uri uri) {
         String path = null;
@@ -102,4 +143,30 @@ public final class FileUtils {
     }
     private static boolean isMediaDocument(Uri uri) {  return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
+
+    private static File renameSuffix(File mp4File) {
+
+        Log.d("path路径", mp4File.getName().substring(0, mp4File.getName().indexOf("."))+ "");
+        String encodeFilePath = mp4File.getParentFile().getPath();
+        File newFile = new File(encodeFilePath + File.separator
+        + mp4File.getName().substring(0, mp4File.getName().indexOf(".")) + ".zip");
+        if (newFile.exists()) {
+            newFile.delete();
+        }
+        try {
+            boolean flag = newFile.createNewFile();
+            Log.d("新建文件", flag + "");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        Log.d("w文件位置", newFile.isFile() ? "yes" : "no");
+        Log.d("w文件位置", newFile.getPath() + "||" + mp4File.getPath());
+        boolean flag = mp4File.renameTo(newFile);
+        if (flag) {
+            return newFile;
+        }
+
+        return null;
+    }
+
 }

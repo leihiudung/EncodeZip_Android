@@ -80,8 +80,8 @@ public class NetworkUtil {
 
         String token = PreferenceUtil.getString(context, PreferenceUtil.getTokenPreference());
 
-//        String uri = "http://192.168.2.216:8081/employee/upload";
-        final Request request = new Request.Builder().url(FileUtils.SERVER_ADDR).addHeader("Authorization", token).post(requestBody.build()).build();
+        String uri = FileUtils.SERVER_ADDR + "/employee/upload";
+        final Request request = new Request.Builder().url(uri).addHeader("Authorization", token).post(requestBody.build()).build();
         Call call = client.newCall(request);
         call.enqueue(new Callback() {
             @Override

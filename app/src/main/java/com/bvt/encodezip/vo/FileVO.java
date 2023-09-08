@@ -4,6 +4,8 @@ public class FileVO {
 
     private Integer id;
     private String fileName;
+
+    private String fileAliasName;
     private String teleporter;
 
 
@@ -21,6 +23,14 @@ public class FileVO {
 
     public void setFileName(String fileName) {
         this.fileName = fileName;
+    }
+
+    public String getFileAliasName() {
+        return fileAliasName;
+    }
+
+    public void setFileAliasName(String fileAliasName) {
+        this.fileAliasName = fileAliasName;
     }
 
     public String getTeleporter() {
