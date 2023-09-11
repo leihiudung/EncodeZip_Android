@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -44,6 +45,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -89,7 +92,12 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
         fileListView = findViewById(R.id.file_listview);
         fileListView.setAdapter(adapter);
         fileListView.setOnItemLongClickListener(this);
-        initData();
+        try {
+            initData();
+        } catch (Exception e) {
+            Log.e("错误", e.getMessage());
+        }
+
     }
 
     @Override
@@ -97,6 +105,27 @@ public class FileListActivity extends AppCompatActivity implements AdapterView.O
         super.onResume();
         dropTempFile();
     }
+
+    private static boolean mBackKeyPressed = false;     // 记录是否有首次按键
+
+    @Override
+    public void onBackPressed() {
+        if (!mBackKeyPressed) {
+            Toast.makeText(this, R.string.title_exit_tips, Toast.LENGTH_SHORT).show();
+            mBackKeyPressed = true;
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    mBackKeyPressed = false;
+                }
+            }, 2000);
+        } else {
+            PreferenceUtil.removePrefString(this, PreferenceUtil.getTokenPreference());
+            super.onBackPressed();
+        }
+    }
+
+
 
     private void initView() {
         toolbar = findViewById(R.id.file_toolbar);

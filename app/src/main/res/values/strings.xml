@@ -2,7 +2,7 @@
     <string name="app_name">EncodeZip</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
+    <string name="first_fragment_label">登陆</string>
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
@@ -17,7 +17,7 @@
     <string name="login_btn_text">Login</string>
 
     <!-- FileListActivity -->
-    <string name="file_list_activity_title">File List</string>
+    <string name="file_list_activity_title">文件列表</string>
     <string name="file_list_title">文件中心</string>
     <string name="file_list_select">选择文件</string>
     <string name="file_alert_dialog_long_selected">需要下载该文件吗</string>
@@ -26,4 +26,5 @@
     <string name="file_alert_dialog_negative">暂不</string>
     <string name="file_alert_dialog_download_finish">下载完成</string>
     <string name="title_activity_file_loaded_list">FileLoadedListActivity</string>
+    <string name="title_exit_tips">再按一次即退出</string>
 </resources>

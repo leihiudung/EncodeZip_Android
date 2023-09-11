@@ -23,16 +23,16 @@ import java.util.List;
 
 public final class FileUtils {
 
-    public static final String SERVER_ADDR = "http://192.168.2.216:8081";
+    public static final String SERVER_ADDR = "http://119.23.67.3:888/encode";
     public static final String DWONLOADED_FILE_LIST = "downloaded_file";
 
     public static String decodeFile(Context context, File file) throws Exception {
         Log.d("文件fileutlis", file.exists() ? "YES" : "NO");
         File destinationFile = renameSuffix(file);
         ZipFile zFile = new ZipFile(destinationFile);
-        zFile.setCharset(Charset.forName("UTF-8"));
+//        zFile.setCharset(Charset.forName("UTF-8"));
         if (!zFile.isValidZipFile()) {
-            throw new ZipException("压缩文件不合法,可能被损坏.");
+//            throw new ZipException("压缩文件不合法,可能被损坏.");
         }
 
         String destPath = context.getExternalCacheDir() + "/" + "temp";

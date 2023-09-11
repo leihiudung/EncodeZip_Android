@@ -104,5 +104,20 @@ public class PreferenceUtil {
         String filesName = sharedPreferences.getString(preKey, null);
         return filesName;
     }
+
+    public static boolean removePrefString(Context context, String preKey) {
+        if (context == null) {
+            return false;
+        }
+        if (sharedPreferences == null) {
+            sharedPreferences = context.getSharedPreferences(preKey, Context.MODE_PRIVATE);
+
+        }
+        if (editor == null) {
+            editor = sharedPreferences.edit();
+        }
+        editor.remove(preKey);
+        return true;
+    }
 }
 

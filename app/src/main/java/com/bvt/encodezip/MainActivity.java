@@ -160,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                System.out.println("Error");
+                Log.e("链接错误", e.getMessage());
             }
 
             @Override
@@ -192,8 +192,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void jumpActivity() {
+
         Intent intent = new Intent(this, FileListActivity.class);
+        intent.setAction(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
         startActivity(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        System.exit(1);
+        super.onBackPressed();
     }
 
     public void excise() {
