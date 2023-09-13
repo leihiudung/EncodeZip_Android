@@ -66,14 +66,12 @@ public class FileBrowseActivity extends AppCompatActivity {
 
 //        mWebView.setWebChromeClient(new WebChromeClient());
 
-        if (fileSuffix.equalsIgnoreCase("pdf")) {
-            setWebViewContent(fileName, fileSuffix);
-        } else if (fileSuffix.equalsIgnoreCase("xlsx")) {
-
-        } else if (fileSuffix.equalsIgnoreCase("jpg") || fileSuffix.equalsIgnoreCase("png") || fileSuffix.equalsIgnoreCase("img")) {
+        if (fileSuffix.equalsIgnoreCase("jpg") || fileSuffix.equalsIgnoreCase("png") || fileSuffix.equalsIgnoreCase("img")) {
             mWebView.setVisibility(View.GONE);
             imageView.setVisibility(View.VISIBLE);
             setWebImage(fileName, fileSuffix);
+        } else {
+            setWebViewContent(fileName, fileSuffix);
         }
 
     }
