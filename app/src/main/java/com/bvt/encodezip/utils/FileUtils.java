@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class FileUtils {
+//    public static final String SERVER_ADDR = "http://119.23.67.3:888/encode";
 
     public static final String SERVER_ADDR = "http://192.168.2.216:8081";//"http://119.23.67.3:888/encode";
     public static final String DWONLOADED_FILE_LIST = "downloaded_file";

@@ -166,23 +166,31 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 try {
-                    JSONObject jsonobj = new JSONObject(response.body().string());
-                    int rescode = jsonobj.getInt("code");
-                    String resmsg = jsonobj.getString("msg");
-                    if(rescode==200){
-                        JSONObject resdata = jsonobj.getJSONObject("data");
-                        String tokenData = resdata.getString("token");
+                    if (response.code() == 200) {
+                        JSONObject jsonobj = new JSONObject(response.body().string());
+                        int rescode = jsonobj.getInt("code");
+                        String resmsg = jsonobj.getString("msg");
+                        if(rescode==200){
+                            JSONObject resdata = jsonobj.getJSONObject("data");
+                            String tokenData = resdata.getString("token");
 
-                        PreferenceUtil.putPrefString(getBaseContext(), PreferenceUtil.getTokenPreference(), tokenData.toString());
-                        jumpActivity();
-                    }else{
-                        runOnUiThread(new Runnable() {
-                            public void run() {
-                                Toast.makeText(getApplicationContext(), "用户名/密码不对", Toast.LENGTH_LONG).show();
-                            }
-                        });
+                            PreferenceUtil.putPrefString(getBaseContext(), PreferenceUtil.getTokenPreference(), tokenData.toString());
+                            jumpActivity();
+                        }else{
+                            runOnUiThread(new Runnable() {
+                                public void run() {
+                                    Toast.makeText(getApplicationContext(), "用户名/密码不对", Toast.LENGTH_LONG).show();
+                                }
+                            });
 
+                        }
+                        return;
                     }
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), "异常", Toast.LENGTH_LONG).show();
+                        }
+                    });
                 } catch (JSONException e) {
                     throw new RuntimeException(e);
                 }
